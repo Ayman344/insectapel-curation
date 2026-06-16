@@ -1,6 +1,6 @@
-# Pass 3 Curation App (Streamlit)
+# insectapel-curation
 
-Web UI to review flagged chemical structures from the 1947 King USDA repellent dataset.
+Pass 3 curation app (Streamlit) — review flagged chemical structures from the 1947 King USDA repellent dataset.
 
 ## Run locally
 
