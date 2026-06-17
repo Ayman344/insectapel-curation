@@ -84,12 +84,20 @@ def refresh_data() -> None:
     st.session_state.queue_pos = 0
 
 
+def init_session() -> None:
+    if "export_df" not in st.session_state:
+        st.session_state.export_df = load_merged_dataset()
+    if "queue_pos" not in st.session_state:
+        st.session_state.queue_pos = 0
+    if "reviewer_name" not in st.session_state:
+        st.session_state.reviewer_name = ""
+
+
 def main():
     st.set_page_config(page_title="Pass 3 Curation", layout="wide")
     st.title("Pass 3 Chemical Name Curation")
 
-    if "export_df" not in st.session_state:
-        st.session_state.export_df = load_merged_dataset()
+    init_session()
 
     df = st.session_state.export_df
     ncol = "Chemical" if "Chemical" in df.columns else "_name"
@@ -155,14 +163,18 @@ def main():
         return
 
     nav1, nav2, nav3 = st.sidebar.columns(3)
+    pos = int(st.session_state.queue_pos)
     if nav1.button("◀ Prev", use_container_width=True):
-        st.session_state.queue_pos = max(0, st.session_state.queue_pos - 1)
+        st.session_state.queue_pos = max(0, pos - 1)
+        st.rerun()
     if nav3.button("Next ▶", use_container_width=True):
-        st.session_state.queue_pos = min(len(sub) - 1, st.session_state.queue_pos + 1)
+        st.session_state.queue_pos = min(len(sub) - 1, pos + 1)
+        st.rerun()
     if nav2.button("Next unreviewed", use_container_width=True):
         st.session_state.queue_pos = 0
+        st.rerun()
 
-    st.session_state.queue_pos = min(st.session_state.queue_pos, len(sub) - 1)
+    st.session_state.queue_pos = min(int(st.session_state.queue_pos), len(sub) - 1)
     st.session_state.queue_pos = max(0, st.session_state.queue_pos)
     row = sub.iloc[st.session_state.queue_pos]
     reviewed = is_reviewed(row)
