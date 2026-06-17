@@ -18,3 +18,27 @@ Hosted on [Streamlit Community Cloud](https://share.streamlit.io). Main file: `p
 ## Data
 
 `dataset_from_ccast.xlsx` — Pass 3 output with SMARTS and CCAST columns (do not commit `.env` or API caches).
+
+`curation_progress.csv` — live review log (one row per reviewed chemical); updated via GitHub when reviewers apply decisions.
+
+## GitHub sync (multi-reviewer)
+
+In Streamlit Cloud **Secrets**, add:
+
+```toml
+GITHUB_TOKEN = "ghp_your_token_with_repo_scope"
+GITHUB_REPO = "Ayman344/insectapel-curation"
+GITHUB_BRANCH = "main"
+```
+
+Create a classic Personal Access Token at GitHub → Settings → Developer settings → Tokens (classic) with **repo** scope.
+
+Locally without a token, reviews save to `curation_progress.csv` in this folder.
+
+Pull all reviews anytime:
+
+```bash
+git pull
+```
+
+The file `curation_progress.csv` contains who reviewed each Row_ID and their decision.

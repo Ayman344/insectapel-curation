@@ -7,5 +7,6 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 *.pdf
+!Curation_Reviewer_Guide.pdf
 agent-transcripts/
 assets/
