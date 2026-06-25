@@ -1,0 +1,10 @@
+cache/
+outputs/
+outputs_ccast/
+_extract/
+py2opsin_temp_input.txt
+*.log
+__pycache__/
+*.pyc
+.env
+.env.*

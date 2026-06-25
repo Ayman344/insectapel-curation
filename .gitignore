@@ -6,6 +6,9 @@ ccast_checkpoint.csv
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# Large regenerable structure-render HTML (kept out of git to avoid repo bloat)
+resolved_structures*.html
 *.pdf
 !Curation_Reviewer_Guide.pdf
 agent-transcripts/

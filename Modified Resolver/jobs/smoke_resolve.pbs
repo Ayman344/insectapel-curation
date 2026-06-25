@@ -1,0 +1,46 @@
+#!/bin/bash
+#PBS -N chemresolve_smoke50
+#PBS -l walltime=00:45:00
+#PBS -l nodes=1:ppn=1
+#PBS -j oe
+#PBS -o smoke50_pbs.log
+
+# CCAST smoke test: resolve 50 chemical names (PubChem + CIRpy + OPSIN).
+#
+# Use SCRATCH (not backed up — copy results to your PC when done):
+#   export PROJ=/mmfs1/scratch/$USER/chemresolve
+#   cd "$PROJ/Modified Resolver"
+#   qsub jobs/smoke_resolve.pbs
+#
+# PBS_O_WORKDIR is set to the directory you run qsub from.
+
+set -euo pipefail
+
+echo "=== chemresolve smoke50 PBS job ==="
+echo "Host: $(hostname)"
+echo "Start: $(date)"
+echo "PBS_O_WORKDIR=${PBS_O_WORKDIR:-$(pwd)}"
+cd "${PBS_O_WORKDIR}"
+
+# --- Adjust if your CCAST site uses modules (uncomment and edit) ---
+# module purge
+# module load python/3.11
+# module load java
+
+echo "Python: $(python3 --version 2>&1 || python --version)"
+echo "Java: $(java -version 2>&1 | head -1 || echo 'Java not found — OPSIN will be skipped')"
+
+# User-site installs (no admin needed)
+python3 -m pip install --user -q -r requirements.txt
+
+echo "Resolver availability:"
+python3 -c "import sys; sys.path.insert(0,'.'); from chemresolve.resolvers import resolver_availability; print(resolver_availability())"
+
+echo ""
+echo "=== Running smoke_resolve.py --limit 50 ==="
+python3 scripts/smoke_resolve.py --limit 50 --data-dir . --cache cache/resolve_cache.json
+
+echo ""
+echo "Done: $(date)"
+echo "Log file: ${PBS_O_WORKDIR}/smoke50_pbs.log"
+echo "Cache:    ${PBS_O_WORKDIR}/cache/resolve_cache.json"

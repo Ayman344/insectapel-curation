@@ -1,0 +1,84 @@
+#!/bin/bash
+#PBS -N chemresolve_1947
+#PBS -l walltime=12:00:00
+#PBS -l nodes=1:ppn=1
+#PBS -j oe
+#PBS -o resolve_1947_pbs.log
+#PBS -m abe
+#PBS -M ayman.akash@ndsu.edu
+
+# =====================================================================
+# Full 1947 dataset resolution on CCAST (validator-gated).
+#
+# Use SCRATCH (not backed up — download outputs to your PC when done):
+#   export PROJ="/mmfs1/scratch/$USER/chemresolve/Modified Resolver"
+#   cd "$PROJ"
+#   qsub jobs/resolve_1947.pbs
+#
+# This job is RESUMABLE: every lookup is cached, so if it is interrupted
+# (walltime, node failure) just qsub it again and it continues from the
+# cache instead of repeating finished work.
+#
+# Phone notification: set NTFY_TOPIC below to a private topic name, install
+# the free "ntfy" app on your phone, and subscribe to that same topic.
+# Leave it blank to disable phone push (email still works via #PBS -m abe).
+# =====================================================================
+
+NTFY_TOPIC="ayman-ccast-7f3a9b2c"   # private topic; subscribe to this in the ntfy phone app
+
+set -uo pipefail
+
+echo "=== chemresolve 1947 full run ==="
+echo "Host: $(hostname)"
+echo "Start: $(date)"
+echo "PBS_O_WORKDIR=${PBS_O_WORKDIR:-$(pwd)}"
+cd "${PBS_O_WORKDIR}"
+
+# --- Adjust if your CCAST site uses modules (uncomment + edit) ---
+# module purge
+# module load python/3.11
+# module load java
+
+echo "Python: $(python3 --version 2>&1 || python --version)"
+echo "Java:   $(java -version 2>&1 | head -1 || echo 'Java not found - OPSIN will be skipped')"
+
+python3 -m pip install --user -q -r requirements.txt
+
+echo "Resolver availability:"
+python3 -c "import sys; sys.path.insert(0,'.'); from chemresolve.resolvers import resolver_availability; print(resolver_availability())"
+
+echo ""
+echo "=== Running run_resolve.py --year 1947 ==="
+python3 scripts/run_resolve.py \
+    --year 1947 \
+    --data-dir . \
+    --cache cache/resolve_cache.json \
+    --out-dir outputs \
+    --flush-every 100
+RC=$?
+
+echo ""
+echo "Exit code: ${RC}"
+echo "Done: $(date)"
+
+# --- Build a one-line summary for notifications ---
+SUMMARY=$(grep -E "^DONE year=1947" resolve_1947_pbs.log | tail -1)
+[ -z "${SUMMARY}" ] && SUMMARY="run_resolve finished with exit code ${RC} (no DONE line — check log)"
+
+# --- Phone push via ntfy (optional) ---
+if [ -n "${NTFY_TOPIC}" ]; then
+    curl -s \
+        -H "Title: CCAST 1947 run finished" \
+        -H "Priority: high" \
+        -H "Tags: white_check_mark" \
+        -d "${SUMMARY}" \
+        "https://ntfy.sh/${NTFY_TOPIC}" >/dev/null \
+        && echo "Phone notification sent to ntfy topic." \
+        || echo "ntfy notification failed (non-fatal)."
+fi
+
+echo ""
+echo "Results: ${PBS_O_WORKDIR}/outputs/resolved_1947.csv"
+echo "Cache:   ${PBS_O_WORKDIR}/cache/resolve_cache.json"
+echo "Log:     ${PBS_O_WORKDIR}/resolve_1947_pbs.log"
+exit ${RC}
